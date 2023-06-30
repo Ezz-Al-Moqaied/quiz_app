@@ -17,32 +17,22 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
   List<Icon> scoreKeeper = [];
   int mark = 0;
   int counter = 10;
-
+  bool isAlert = false ;
   void checkAnswer(bool userChoice) {
-    bool correctAnswer = quizBrain.getQuestionAnswer();
+    bool correct = quizBrain.getQuestionAnswer();
     setState(() {
-      if (correctAnswer == userChoice) {
-        mark = mark + 1;
-        scoreKeeper.add(
-          const Icon(
-            Icons.check,
-            color: Colors.green,
-          ),
-        );
+      if (correct == userChoice) {
+        correctAnswer();
       } else {
-        scoreKeeper.add(
-          const Icon(
-            Icons.close,
-            color: Colors.red,
-          ),
-        );
+        wrongAnswer();
       }
     });
 
     if (quizBrain.isFinished()) {
+      alertWidget(marks: mark, context: context, scoreKeeper: scoreKeeper);
       Timer timer = Timer(const Duration(seconds: 1), () {
-        alertWidget(marks: mark, context: context, scoreKeeper: scoreKeeper);
         setState(() {
+          isAlert = true ;
           quizBrain.reset();
           scoreKeeper.clear();
         });
@@ -61,10 +51,14 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
         counter--;
       });
       if (counter == 0) {
+        wrongAnswer();
         counter = 10;
         quizBrain.nextQuestion();
         if (quizBrain.isFinished()) {
-          alertWidget(marks: mark, context: context, scoreKeeper: scoreKeeper);
+          if(!isAlert){
+            alertWidget(marks: mark, context: context, scoreKeeper: scoreKeeper);
+            timer.cancel();
+          }
           timer.cancel();
         }
       }
@@ -149,7 +143,7 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(25),
                       ),
-                      side: BorderSide(color: Colors.white)),
+                      side: const BorderSide(color: Colors.white)),
                   child: const Icon(
                     Icons.favorite,
                     color: Colors.white,
@@ -226,6 +220,24 @@ class _TrueFalseQuizState extends State<TrueFalseQuiz> {
             )
           ],
         ),
+      ),
+    );
+  }
+
+  void correctAnswer (){
+    mark = mark + 1;
+    scoreKeeper.add(
+      const Icon(
+        Icons.check,
+        color: Colors.green,
+      ),
+    );
+  }
+  void wrongAnswer (){
+    scoreKeeper.add(
+      const Icon(
+        Icons.close,
+        color: Colors.red,
       ),
     );
   }
