@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:quiz_app/screens/home.dart';
+import 'package:quiz_app/widgets/navigate_widget.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
 
 Future<bool?> alertWidget({
@@ -9,20 +11,30 @@ Future<bool?> alertWidget({
     Alert(
       context: context,
       type: AlertType.success,
-      title: "RFLUTTER ALERT",
-      desc: "Exam questions are over.. $marks / 5 ",
+      title: "The Test is over",
+      desc: "Exam questions are over .. \n result : $marks / 5 ",
+      style: const AlertStyle(
+        descStyle: TextStyle(
+          fontSize: 20 ,
+          fontWeight: FontWeight.bold ,
+        ),
+        titleStyle: TextStyle(
+          fontWeight: FontWeight.bold ,
+          fontSize: 24 ,
+        ),
+      ),
       content: Row(
         children: scoreKeeper,
       ),
       buttons: [
         DialogButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => navigatePushReplacement(context: context, nextScreen: const HomePage()),
           gradient: const LinearGradient(colors: [
             Color.fromRGBO(116, 116, 191, 1.0),
             Color.fromRGBO(52, 138, 199, 1.0)
           ]),
           child: const Text(
-            "exam REPETITON",
+            "Back to the Home page",
             style: TextStyle(color: Colors.white, fontSize: 20),
           ),
         ),
