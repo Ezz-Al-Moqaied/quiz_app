@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:quiz_app/constants.dart';
 import 'package:quiz_app/model/multipe_choice/quizBrainMultiple.dart';
 import 'package:quiz_app/screens/home.dart';
+import 'package:quiz_app/widgets/alert.dart';
 import 'package:quiz_app/widgets/my_outline_btn.dart';
+import 'package:quiz_app/widgets/navigate_widget.dart';
 
 class MultiQScreen extends StatefulWidget {
   const MultiQScreen({Key? key}) : super(key: key);
@@ -16,39 +18,34 @@ class _MultiQScreenState extends State<MultiQScreen> {
   QuizBrainMulti quizBrainMulti = QuizBrainMulti();
   List<Icon> scoreKeeper = [];
   int counter = 10;
-  int result = 0;
+  int mark = 0;
+  bool isAlert = false;
 
-  int checkAnswer(int index) {
-    int correctAnswer = quizBrainMulti.getQuestionAnswer();
+  void checkAnswer(int index) {
+    int correct = quizBrainMulti.getQuestionAnswer();
     setState(() {
-      if (correctAnswer == index) {
-        scoreKeeper.add(
-          const Icon(
-            Icons.check,
-            color: Colors.green,
-          ),
-        );
+      if (correct == index) {
+        correctAnswer();
       } else {
-        scoreKeeper.add(
-          const Icon(
-            Icons.close,
-            color: Colors.red,
-          ),
-        );
+        wrongAnswer();
       }
     });
 
     if (quizBrainMulti.isFinished()) {
-      Timer(const Duration(seconds: 1), () {
+      alertWidget(marks: mark, context: context, scoreKeeper: scoreKeeper);
+
+      Timer timer = Timer(const Duration(seconds: 1), () {
         setState(() {
+          isAlert = true;
           quizBrainMulti.reset();
           scoreKeeper.clear();
         });
       });
+      timer.cancel();
     } else {
+      counter = 10;
       quizBrainMulti.nextQuestion();
     }
-    return correctAnswer;
   }
 
   @override
@@ -57,21 +54,17 @@ class _MultiQScreenState extends State<MultiQScreen> {
       setState(() {
         counter--;
       });
-
-      if (quizBrainMulti.isFinished()) {
-        if (counter == 0) {
-          timer.cancel();
-          print("$result /2");
-        }
-      } else if (counter == 0) {
-        setState(() {
-          counter = 10;
-        });
+      if (counter == 0) {
+        wrongAnswer();
+        counter = 10;
+        quizBrainMulti.nextQuestion();
         if (quizBrainMulti.isFinished()) {
+          if (!isAlert) {
+            alertWidget(
+                marks: mark, context: context, scoreKeeper: scoreKeeper);
+            timer.cancel();
+          }
           timer.cancel();
-          print("$result /2");
-        } else {
-          quizBrainMulti.nextQuestion();
         }
       }
     });
@@ -113,16 +106,7 @@ class _MultiQScreenState extends State<MultiQScreen> {
                       iconColor: Colors.white,
                       bColor: Colors.white,
                       function: () {
-                        // Navigator.pop(context);
-                        // Navigator.pop(context);
-
-                        Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const HomePage(),
-                          ),
-                          (route) => false,
-                        );
+                        navigatePop(context: context);
                       },
                     ),
                   ),
@@ -191,21 +175,16 @@ class _MultiQScreenState extends State<MultiQScreen> {
               const SizedBox(
                 height: 48,
               ),
-              Expanded(
-                child: ListView.builder(
-                  itemBuilder: (context, index) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
+              ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemBuilder: (context, index) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: InkWell(
                       child: ElevatedButton(
                         onPressed: () {
-                          setState(() {
-                            setState(() {
-                              counter = 10;
-                            });
-                          });
-                          if (checkAnswer(index) == index) {
-                            result = result + 1;
-                          }
+                          checkAnswer(index);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
@@ -238,17 +217,42 @@ class _MultiQScreenState extends State<MultiQScreen> {
                           ],
                         ),
                       ),
-                    );
-                  },
-                  itemCount: quizBrainMulti.getOptions().length,
-                ),
+                    ),
+                  );
+                },
+                itemCount: quizBrainMulti.getOptions().length,
               ),
               const SizedBox(
                 height: 48,
               ),
+              Wrap(
+                children: scoreKeeper,
+              ),
+              const SizedBox(
+                height: 72,
+              )
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void correctAnswer() {
+    mark = mark + 1;
+    scoreKeeper.add(
+      const Icon(
+        Icons.check,
+        color: Colors.green,
+      ),
+    );
+  }
+
+  void wrongAnswer() {
+    scoreKeeper.add(
+      const Icon(
+        Icons.close,
+        color: Colors.red,
       ),
     );
   }
